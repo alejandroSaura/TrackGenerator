@@ -4,6 +4,8 @@ using System.Collections.Generic;
 [ExecuteInEditMode]
 public class Curve : MonoBehaviour
 {
+    public float trackWidth = 0.5f;
+    public int horizontalDivisions = 10;
     public int divisionsPerCurve = 5;
 
     public float newNodeDistance = 2.5f;
@@ -27,7 +29,7 @@ public class Curve : MonoBehaviour
 
         for (int i = 0; i < splines.Count; ++i)
         {
-            splines[i].Extrude(meshes[i], extrudeShape, divisionsPerCurve);
+            splines[i].Extrude(meshes[i], extrudeShape);
         }
     }    
 
@@ -42,7 +44,7 @@ public class Curve : MonoBehaviour
 
             GameObject firstNodeGO = Instantiate(nodePrefab, transform.position, transform.rotation) as GameObject;
             firstNodeGO.transform.parent = transform;
-            Node firstNode = firstNodeGO.GetComponent<Node>();
+            Node firstNode = firstNodeGO.GetComponent<Node>();            
             firstSpline.startNode = firstNode;
 
             GameObject secondNodeGO = Instantiate(nodePrefab, transform.position + transform.forward * newNodeDistance, transform.rotation) as GameObject;
@@ -70,6 +72,7 @@ public class Curve : MonoBehaviour
             GameObject newNodeGO = Instantiate(nodePrefab, lastNode.position + lastNode.transform.forward * newNodeDistance, lastNode.transform.rotation) as GameObject;
             newNodeGO.transform.parent = transform;
             Node newNode = newNodeGO.GetComponent<Node>();
+            newNode.curve = this;
 
             GameObject newSplineGO = Instantiate(splinePrefab, lastNode.position, lastNode.transform.rotation) as GameObject;
             newSplineGO.transform.parent = transform;
@@ -77,6 +80,7 @@ public class Curve : MonoBehaviour
 
             newSpline.startNode = lastNode;
             newSpline.endNode = newNode;
+            newSpline.curve = this;
 
             //move the spline GO between nodes
             //newSpline.transform.position = (lastNode.transform.position + newNodeGO.transform.position) / 2;

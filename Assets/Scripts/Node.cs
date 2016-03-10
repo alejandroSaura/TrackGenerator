@@ -5,11 +5,16 @@ using System.Collections;
 public class Node : MonoBehaviour
 {
     public Curve curve;
+    
 
     public float gizmoSize = 0.2f;
 
     public float frontWeight = 1;
     public float backWeight = 1;
+
+    public float trackWidthModifier = 0;
+    public float rightCurvature = 0; // between 0 and 1
+    public float leftCurvature = 0; // between 0 and 1
 
     Transform frontTransform;
     Transform backTransform;
