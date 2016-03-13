@@ -9,11 +9,11 @@ using System;
 [Serializable]
 class CurveData
 {
+    public bool closed;
     public NodeData[] nodesData;
     public BezierSpline[] splinesData;
 }
 
-[InitializeOnLoad]
 [ExecuteInEditMode]
 public class Curve : MonoBehaviour
 {
@@ -33,9 +33,26 @@ public class Curve : MonoBehaviour
 
     ExtrudeShape extrudeShape;
 
-    static Curve()
+    bool closed = false;
+
+    
+    string lastState = "";
+    void Update()
     {
-        Debug.Log("Up and running");
+        // Reload curve when changing between editor and play modes
+
+        string state = "";
+        if (EditorApplication.isPlaying)
+            state = "PlayMode";
+        else
+        {
+            state = "EditorMode";
+        }
+        if(state != lastState)
+        {            
+            Load();
+        }
+        lastState = state;
     }
 
     public void Save()
@@ -59,6 +76,7 @@ public class Curve : MonoBehaviour
         //}
         //data.splinesData = _splinesData.ToArray();
 
+        data.closed = this.closed;
 
         bf.Serialize(file, data);
         file.Close();
@@ -75,6 +93,8 @@ public class Curve : MonoBehaviour
             CurveData data = (CurveData)bf.Deserialize(file);
             file.Close();
 
+            if (extrudeShape == null) { extrudeShape = new ExtrudeShape(); }
+
             Node previousNode = null;
             for (int i = 0; i < data.nodesData.Length; ++i)
             {
@@ -83,15 +103,20 @@ public class Curve : MonoBehaviour
                 node.Load(data.nodesData[i]);
 
                 // If not the first, create a spline with the previous one
-                if (extrudeShape == null) { extrudeShape = new ExtrudeShape(); }
                 if (previousNode != null)
                 {
                     BezierSpline spline = CreateSpline(previousNode, node);
                     spline.Extrude(meshes[i - 1], extrudeShape);
                 }
                 previousNode = node;
-            }            
+            }
 
+            this.closed = data.closed;
+            if(closed)
+            {
+                BezierSpline spline = CreateSpline(nodes[nodes.Count-1], nodes[0]);
+                spline.Extrude(meshes[meshes.Count-1], extrudeShape);
+            }
         }
         else
         {
@@ -106,7 +131,7 @@ public class Curve : MonoBehaviour
         Node node = nodeGO.GetComponent<Node>();
 
         node.curve = this;
-        nodes.Add(node);
+        nodes.Add(node);        
 
         return node;
     }
@@ -120,6 +145,9 @@ public class Curve : MonoBehaviour
         spline.curve = this;
         spline.startNode = start;
         spline.endNode = end;
+
+        spline.transform.position = (start.transform.position + end.transform.position) / 2;
+
         splines.Add(spline);
         meshes.Add(new Mesh());
 
@@ -141,109 +169,65 @@ public class Curve : MonoBehaviour
 
     public void AddSpline ()
     {
+        if (closed) return;
+
         if (splines.Count == 0)
         {
-            // Create the first segment
-            GameObject firstSplineGO = Instantiate(splinePrefab, transform.position, transform.rotation) as GameObject;
-            firstSplineGO.transform.parent = transform;
-            BezierSpline firstSpline = firstSplineGO.GetComponent<BezierSpline>();
-
-            GameObject firstNodeGO = Instantiate(nodePrefab, transform.position, transform.rotation) as GameObject;
-            firstNodeGO.transform.parent = transform;
-            Node firstNode = firstNodeGO.GetComponent<Node>();            
-            firstSpline.startNode = firstNode;
-
-            GameObject secondNodeGO = Instantiate(nodePrefab, transform.position + transform.forward * newNodeDistance, transform.rotation) as GameObject;
-            secondNodeGO.transform.parent = transform;
-            Node secondNode = secondNodeGO.GetComponent<Node>();
-            firstSpline.endNode = secondNode;
-
-            // Add references to this object
-            firstNode.curve = this;
-            secondNode.curve = this;
-            firstSpline.curve = this;
-
-            // Move the spline GO between nodes
-            //firstSplineGO.transform.position = (firstNodeGO.transform.position + secondNode.transform.position) / 2;
-
-            nodes.Add(firstNode);
-            nodes.Add(secondNode);
-
-            splines.Add(firstSpline);
-            meshes.Add(new Mesh());
+            // Create the first segment           
+            Node firstNode = CreateNode(transform.position, transform.rotation);
+            Node secondNode = CreateNode(transform.position + transform.forward * newNodeDistance, transform.rotation);
+            CreateSpline(firstNode, secondNode);
         }
         else
         {
-            Node lastNode = nodes[nodes.Count - 1];
-            GameObject newNodeGO = Instantiate(nodePrefab, lastNode.position + lastNode.transform.forward * newNodeDistance, lastNode.transform.rotation) as GameObject;
-            newNodeGO.transform.parent = transform;
-            Node newNode = newNodeGO.GetComponent<Node>();
-            newNode.curve = this;
-
-            GameObject newSplineGO = Instantiate(splinePrefab, lastNode.position, lastNode.transform.rotation) as GameObject;
-            newSplineGO.transform.parent = transform;
-            BezierSpline newSpline = newSplineGO.GetComponent<BezierSpline>();
-
-            newSpline.startNode = lastNode;
-            newSpline.endNode = newNode;
-            newSpline.curve = this;
-
-            //move the spline GO between nodes
-            //newSpline.transform.position = (lastNode.transform.position + newNodeGO.transform.position) / 2;
-
-            nodes.Add(newNode);
-            splines.Add(newSpline);
-            meshes.Add(new Mesh());
+            Node lastNode = nodes[nodes.Count - 1];          
+            Node newNode = CreateNode(lastNode.position + lastNode.transform.forward * newNodeDistance, lastNode.transform.rotation);
+            CreateSpline(lastNode, newNode);
         }
     }	
 
     public void CloseCurve()
     {
+        if (closed) return;
+
         Node lastNode = nodes[nodes.Count - 1];
-        Node firstNode = nodes[0];       
+        Node firstNode = nodes[0];
+        CreateSpline(lastNode, firstNode);
 
-        GameObject newSplineGO = Instantiate(splinePrefab, lastNode.position, lastNode.transform.rotation) as GameObject;
-        newSplineGO.transform.parent = transform;
-        BezierSpline newSpline = newSplineGO.GetComponent<BezierSpline>();
-
-        newSpline.startNode = lastNode;
-        newSpline.endNode = firstNode;
-
-        newSpline.curve = this;
-
-        //move the spline GO between nodes
-        newSpline.transform.position = (lastNode.transform.position + firstNode.transform.position) / 2;
-        
-        splines.Add(newSpline);
-        meshes.Add(new Mesh());
+        closed = true;       
     }
 
     public void ClearCurve()
     {
+        // Clear node references
         for (int i = 0; i < nodes.Count; ++i)
         {
             DestroyImmediate(nodes[i].gameObject);
         }
         nodes.Clear();
 
+        // Clear spline references
         for (int i = 0; i < splines.Count; ++i)
         {
             DestroyImmediate(splines[i].gameObject);
         }
         splines.Clear();
 
+        // Clear mesh references
         for (int i = 0; i < meshes.Count; ++i)
         {
             DestroyImmediate(meshes[i]);
         }
         meshes.Clear();
 
-        // destroy all other unreferenced elements        
+        // destroy other unreferenced elements        
         while(transform.childCount != 0)
         {
             if(transform.GetChild(0) != null)
                 DestroyImmediate(transform.GetChild(0).gameObject);
         }
+
+        closed = false;
 
     }
 

@@ -67,7 +67,6 @@ public class Node : MonoBehaviour
 
         data.frontControl = frontTransform.position;
         data.backControl = backTransform.position;
-        Debug.Log("OnSave: position = " + data.frontControl);
 
         data.trackWidthModifier = this.trackWidthModifier;
         data.rightCurvature = this.rightCurvature; // between 0 and 1
@@ -95,8 +94,6 @@ public class Node : MonoBehaviour
 
         frontTransform.position = data.frontControl;
         backTransform.position = data.backControl;
-
-        Debug.Log("OnLoad: position = " + data.frontControl);
     }
 
     void Awake()

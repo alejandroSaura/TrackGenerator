@@ -78,7 +78,6 @@ public class ExtrudeShape
                 ++counter;
             }
         }
-        Debug.Log("Shape calculus finalized");
     }
 
     

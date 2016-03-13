@@ -155,11 +155,6 @@ public class BezierSpline : MonoBehaviour
 
         int divisions = (int)(curve.divisionsPerCurve * splineLength / curve.trackWidth / 20);
         int vertsInShape = curve.horizontalDivisions + 1;
-        int segments = divisions;
-        int edgeLoops = divisions + 1;
-        int vertCount = edgeLoops * vertsInShape;
-        int triCount = shape.lines.Length * segments * 2;
-        int triIndexCount = triCount * 3;
 
         List<int> triangleIndices = new List<int>(); //new int[triIndexCount];
         List <Vector3> vertices = new List<Vector3>();  //new Vector3[vertCount];
@@ -171,7 +166,6 @@ public class BezierSpline : MonoBehaviour
         */
         #region meshGeneration
 
-        Debug.Log("Extrusion Started");
         float divisionLength = 1.0f / (float)divisions;
         orientedPoints = new OrientedPoint[divisions + 1];
 
@@ -237,7 +231,6 @@ public class BezierSpline : MonoBehaviour
             Vector3 up = Vector3.Lerp(startNode.transform.up, endNode.transform.up, t);
             float curvature = Mathf.Lerp(startNode.leftCurvature, endNode.leftCurvature, t);
             float width = curve.trackWidth + Mathf.Lerp(startNode.trackWidthModifier, endNode.trackWidthModifier, t);
-            Matrix4x4 scale = Matrix4x4.Scale(new Vector3(width, width, width));            
 
             // Initialize oriented point
             orientedPoints[i].position = transform.InverseTransformPoint(GetPoint(t));

@@ -2,6 +2,28 @@
 using System.Collections;
 using UnityEditor;
 
+//[InitializeOnLoad]
+//public class Autorun
+//{
+//    static Autorun()
+//    {
+//        EditorApplication.update += RunOnce;
+//    }
+
+//    static void RunOnce()
+//    {
+//        Debug.Log("RunOnce!");
+//        EditorApplication.update -= RunOnce;
+
+//        // This code will execute only once when editor is loaded.
+//        //Curve[] curves = GameObject.FindObjectsOfType<Curve>();
+//        //foreach (Curve c in curves)
+//        //{
+//        //    c.Load();
+//        //}
+//    }
+//}
+
 [CustomEditor(typeof(Curve))]
 public class CurveEditor : Editor {
 
