@@ -26,6 +26,14 @@ public class CurveEditor : Editor {
         {
             myCurve.ClearCurve();
         }
+        if (GUILayout.Button("Save"))
+        {
+            myCurve.Save();
+        }
+        if (GUILayout.Button("Load"))
+        {
+            myCurve.Load();
+        }
     }
 
 }

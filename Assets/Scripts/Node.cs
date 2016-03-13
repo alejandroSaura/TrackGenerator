@@ -1,11 +1,28 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEditor;
+
+[System.Serializable]
+public class NodeData
+{
+    public float gizmoSize;
+
+    public SerializableVector3 frontControl;
+    public SerializableVector3 backControl;
+
+    public float trackWidthModifier;
+    public float rightCurvature; // between 0 and 1
+    public float leftCurvature; // between 0 and 1
+
+    public SerializableVector3 position;
+    public SerializableQuaternion rotation;    
+}
+
 
 [ExecuteInEditMode]
 public class Node : MonoBehaviour
 {
-    public Curve curve;
-    
+    public Curve curve;    
 
     public float gizmoSize = 0.2f;
 
@@ -17,7 +34,7 @@ public class Node : MonoBehaviour
     public float leftCurvature = 0; // between 0 and 1
 
     Transform frontTransform;
-    Transform backTransform;
+    Transform backTransform;   
 
     public Vector3 frontControl
     {
@@ -43,10 +60,50 @@ public class Node : MonoBehaviour
         set { }
     }
 
+    public NodeData Serialize()
+    {
+        NodeData data = new NodeData();
+        data.gizmoSize = this.gizmoSize;
+
+        data.frontControl = frontTransform.position;
+        data.backControl = backTransform.position;
+        Debug.Log("OnSave: position = " + data.frontControl);
+
+        data.trackWidthModifier = this.trackWidthModifier;
+        data.rightCurvature = this.rightCurvature; // between 0 and 1
+        data.leftCurvature = this.leftCurvature; // between 0 and 1
+
+        data.position = transform.position;
+        data.rotation = transform.rotation;
+
+        return data;
+    }
+
+    public void Load(NodeData data)
+    {        
+        gizmoSize = data.gizmoSize;
+
+        frontControl = data.frontControl;
+        backControl = data.backControl;
+
+        trackWidthModifier = data.trackWidthModifier;
+        rightCurvature = data.rightCurvature; // between 0 and 1
+        leftCurvature = data.leftCurvature; // between 0 and 1
+
+        transform.position = data.position;
+        transform.rotation = data.rotation;
+
+        frontTransform.position = data.frontControl;
+        backTransform.position = data.backControl;
+
+        Debug.Log("OnLoad: position = " + data.frontControl);
+    }
+
     void Awake()
     {
         frontTransform = transform.FindChild("front");
         backTransform = transform.FindChild("back");
+
     }
 
     void OnDrawGizmos()

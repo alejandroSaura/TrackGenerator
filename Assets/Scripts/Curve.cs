@@ -1,6 +1,19 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
+using UnityEditor;
+using System;
 
+
+[Serializable]
+class CurveData
+{
+    public NodeData[] nodesData;
+    public BezierSpline[] splinesData;
+}
+
+[InitializeOnLoad]
 [ExecuteInEditMode]
 public class Curve : MonoBehaviour
 {
@@ -19,6 +32,99 @@ public class Curve : MonoBehaviour
     public GameObject splinePrefab;
 
     ExtrudeShape extrudeShape;
+
+    static Curve()
+    {
+        Debug.Log("Up and running");
+    }
+
+    public void Save()
+    {
+        BinaryFormatter bf = new BinaryFormatter();
+        FileStream file = File.Create(Application.dataPath + "/CurvesSavedData/" + gameObject.name + ".curve");        
+
+        CurveData data = new CurveData();
+
+        List<NodeData> _nodesData = new List<NodeData>();
+        foreach (Node n in nodes)
+        {
+            _nodesData.Add(n.Serialize());
+        }
+        data.nodesData = _nodesData.ToArray();
+
+        //List<BezierSpline> _splinesData = new List<BezierSpline>();
+        //foreach (BezierSpline b in splines)
+        //{
+        //    _splinesData.Add(b.Serialize());
+        //}
+        //data.splinesData = _splinesData.ToArray();
+
+
+        bf.Serialize(file, data);
+        file.Close();
+    }
+
+    public void Load()
+    {
+        if(File.Exists(Application.dataPath + "/CurvesSavedData/" + gameObject.name + ".curve"))
+        {
+            ClearCurve();
+
+            BinaryFormatter bf = new BinaryFormatter();
+            FileStream file = File.Open(Application.dataPath + "/CurvesSavedData/" + gameObject.name + ".curve", FileMode.Open);
+            CurveData data = (CurveData)bf.Deserialize(file);
+            file.Close();
+
+            Node previousNode = null;
+            for (int i = 0; i < data.nodesData.Length; ++i)
+            {
+                // Create Node                
+                Node node = CreateNode(transform.position, transform.rotation);
+                node.Load(data.nodesData[i]);
+
+                // If not the first, create a spline with the previous one
+                if (extrudeShape == null) { extrudeShape = new ExtrudeShape(); }
+                if (previousNode != null)
+                {
+                    BezierSpline spline = CreateSpline(previousNode, node);
+                    spline.Extrude(meshes[i - 1], extrudeShape);
+                }
+                previousNode = node;
+            }            
+
+        }
+        else
+        {
+            Debug.Assert(true, "Data file not found");
+        }
+    }
+
+    Node CreateNode(Vector3 position, Quaternion rotation)
+    {
+        GameObject nodeGO = Instantiate(nodePrefab, transform.position, transform.rotation) as GameObject;
+        nodeGO.transform.parent = transform;        
+        Node node = nodeGO.GetComponent<Node>();
+
+        node.curve = this;
+        nodes.Add(node);
+
+        return node;
+    }
+
+    BezierSpline CreateSpline(Node start, Node end)
+    {
+        GameObject splineGO = Instantiate(splinePrefab, transform.position, transform.rotation) as GameObject;
+        splineGO.transform.parent = transform;
+        BezierSpline spline = splineGO.GetComponent<BezierSpline>();
+
+        spline.curve = this;
+        spline.startNode = start;
+        spline.endNode = end;
+        splines.Add(spline);
+        meshes.Add(new Mesh());
+
+        return (spline);
+    }
 
     public void Extrude()
     {
@@ -103,6 +209,8 @@ public class Curve : MonoBehaviour
         newSpline.startNode = lastNode;
         newSpline.endNode = firstNode;
 
+        newSpline.curve = this;
+
         //move the spline GO between nodes
         newSpline.transform.position = (lastNode.transform.position + firstNode.transform.position) / 2;
         
@@ -129,6 +237,13 @@ public class Curve : MonoBehaviour
             DestroyImmediate(meshes[i]);
         }
         meshes.Clear();
+
+        // destroy all other unreferenced elements        
+        while(transform.childCount != 0)
+        {
+            if(transform.GetChild(0) != null)
+                DestroyImmediate(transform.GetChild(0).gameObject);
+        }
 
     }
 

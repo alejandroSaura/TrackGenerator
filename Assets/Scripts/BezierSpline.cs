@@ -1,6 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+[System.Serializable]
+public struct BezierData
+{
+
+}
+
 [ExecuteInEditMode]
 public class BezierSpline : MonoBehaviour
 {    
@@ -12,7 +18,7 @@ public class BezierSpline : MonoBehaviour
     public Node startNode;
     public Node endNode;
 
-    OrientedPoint[] orientedPoints;
+    OrientedPoint[] orientedPoints;    
 
     public Vector3 GetPoint(float t)
     {
