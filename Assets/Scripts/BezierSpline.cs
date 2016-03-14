@@ -320,8 +320,9 @@ public class BezierSpline : MonoBehaviour
         BezierSpline newSpline = curve.CreateSpline(this.startNode, node);
         BezierSpline newSpline2 = curve.CreateSpline(node, endNode);
 
-        // Make sure that its removed from the curve list
-        curve.splines.Remove(this);
+        // Make sure that its removed from the curve list and eliminate the associated mesh
+        curve.meshes.RemoveAt(curve.splines.IndexOf(this));
+        curve.splines.Remove(this);        
         DestroyImmediate(this.gameObject);
     }
 

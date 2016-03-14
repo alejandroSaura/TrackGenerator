@@ -38,6 +38,7 @@ public class Curve : MonoBehaviour
     ExtrudeShape extrudeShape;
 
     bool closed = false;
+    bool connected = false;
 
     
     string lastState = "";
@@ -49,9 +50,8 @@ public class Curve : MonoBehaviour
             state = "PlayMode";
         else
         {
-            state = "EditorMode";
-            //Save();
-            Debug.Log("Saved");
+            state = "EditorMode";            
+            //Debug.Log("Saved");
         }
         if(state != lastState)
         {            
@@ -66,11 +66,15 @@ public class Curve : MonoBehaviour
             Extrude();
         }
 
+        connected = false;
         // Maintain conection with previous and next curve        
         if (nextCurve != null)
         {
-            nodes[nodes.Count - 1].Copy(nextCurve.nodes[0]);            
+            nodes[nodes.Count - 1].Copy(nextCurve.nodes[0]);
+            connected = true;
         }
+
+
     }
 
     public void Save()
@@ -188,7 +192,7 @@ public class Curve : MonoBehaviour
 
     public void AddSpline ()
     {
-        if (closed) return;
+        if (closed || connected) return;
 
         if (splines.Count == 0)
         {
@@ -207,7 +211,7 @@ public class Curve : MonoBehaviour
 
     public void CloseCurve()
     {
-        if (closed) return;
+        if (closed || connected) return;
 
         Node lastNode = nodes[nodes.Count - 1];
         Node firstNode = nodes[0];
