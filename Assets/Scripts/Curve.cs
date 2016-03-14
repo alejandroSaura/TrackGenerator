@@ -17,6 +17,10 @@ class CurveData
 [ExecuteInEditMode]
 public class Curve : MonoBehaviour
 {
+    // connectors
+    public Node nextCurve;
+    // ----------
+
     public float trackWidth = 0.5f;
     public int horizontalDivisions = 10;
     public int divisionsPerCurve = 5;
@@ -40,21 +44,34 @@ public class Curve : MonoBehaviour
     void Update()
     {
         // Reload curve when changing between editor and play modes
-
         string state = "";
         if (EditorApplication.isPlaying)
             state = "PlayMode";
         else
         {
             state = "EditorMode";
-            Save();
+            //Save();
             Debug.Log("Saved");
         }
         if(state != lastState)
         {            
             Load();
         }
-        lastState = state;       
+        lastState = state;
+
+        // On editor: save changes and recreate geometry
+        if (state == "EditorMode")
+        {
+            Save();
+            Extrude();
+        }
+
+        // Maintain conection with previous and next curve        
+        if (nextCurve != null)
+        {
+            nodes[nodes.Count - 1].position = nextCurve.position;
+            nodes[nodes.Count - 1].transform.rotation = nextCurve.transform.rotation;
+        }
     }
 
     public void Save()
@@ -205,21 +222,24 @@ public class Curve : MonoBehaviour
         // Clear node references
         for (int i = 0; i < nodes.Count; ++i)
         {
-            DestroyImmediate(nodes[i].gameObject);
+            if(nodes[i] != null)
+                DestroyImmediate(nodes[i].gameObject);
         }
         nodes.Clear();
 
         // Clear spline references
         for (int i = 0; i < splines.Count; ++i)
         {
-            DestroyImmediate(splines[i].gameObject);
+            if (splines[i] != null)
+                DestroyImmediate(splines[i].gameObject);
         }
         splines.Clear();
 
         // Clear mesh references
         for (int i = 0; i < meshes.Count; ++i)
         {
-            DestroyImmediate(meshes[i]);
+            if (meshes[i] != null)
+                DestroyImmediate(meshes[i]);
         }
         meshes.Clear();
 
