@@ -96,6 +96,24 @@ public class Node : MonoBehaviour
         backTransform.position = data.backControl;
     }
 
+    public void Copy(Node other)
+    {
+        gizmoSize = other.gizmoSize;
+
+        frontControl = other.frontControl;
+        backControl = other.backControl;
+
+        trackWidthModifier = other.trackWidthModifier;
+        rightCurvature = other.rightCurvature; // between 0 and 1
+        leftCurvature = other.leftCurvature; // between 0 and 1
+
+        transform.position = other.position;
+        transform.rotation = other.transform.rotation;
+
+        frontTransform.position = other.frontControl;
+        backTransform.position = other.backControl;
+    }
+
     void Awake()
     {
         frontTransform = transform.FindChild("front");

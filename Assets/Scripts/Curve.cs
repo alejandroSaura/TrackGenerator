@@ -18,7 +18,7 @@ class CurveData
 public class Curve : MonoBehaviour
 {
     // connectors
-    public Node nextCurve;
+    public Curve nextCurve;
     // ----------
 
     public float trackWidth = 0.5f;
@@ -69,8 +69,7 @@ public class Curve : MonoBehaviour
         // Maintain conection with previous and next curve        
         if (nextCurve != null)
         {
-            nodes[nodes.Count - 1].position = nextCurve.position;
-            nodes[nodes.Count - 1].transform.rotation = nextCurve.transform.rotation;
+            nodes[nodes.Count - 1].Copy(nextCurve.nodes[0]);            
         }
     }
 
