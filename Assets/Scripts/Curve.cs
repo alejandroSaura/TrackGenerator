@@ -26,6 +26,15 @@ public class Curve : TrackElement
     
     string lastState = "";
 
+    void Awake()
+    {
+        if (!(EditorApplication.isPlaying))
+        {            
+            if(splines.Count == 0) AddSpline();
+            Save();
+        }
+    }
+
     void Update()
     {
         // Reload curve when changing between editor and play modes
@@ -136,6 +145,9 @@ public class Curve : TrackElement
         GameObject nodeGO = Instantiate(nodePrefab, transform.position, transform.rotation) as GameObject;
         nodeGO.transform.parent = transform;        
         Node node = nodeGO.GetComponent<Node>();
+
+        node.frontTransform = node.transform.FindChild("front");
+        node.backTransform = node.transform.FindChild("back");
 
         node.position = position;
         node.curve = this;

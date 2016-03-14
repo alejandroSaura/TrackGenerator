@@ -23,6 +23,15 @@ public class Bifurcation : TrackElement
 
     string lastState = "";
 
+    void Awake()
+    {
+        if (!(EditorApplication.isPlaying))
+        {            
+            Load();
+            Save();
+        }
+    }
+
     void Update()
     {
         // Reload curve when changing between editor and play modes
@@ -48,13 +57,13 @@ public class Bifurcation : TrackElement
         }
 
         // Maintain conection with next curves        
-        if (nextCurveRight != null)
+        if (nextCurveRight != null && nextCurveRight.nodes.Count > 0)
         {
-            //nodes[nodes.Count - 1].Copy(nextCurveRight.nodes[0]);
+            nodes[3].Copy(nextCurveRight.nodes[0]);
         }
-        if (nextCurveLeft != null)
+        if (nextCurveLeft != null && nextCurveLeft.nodes.Count > 0)
         {
-            //nodes[nodes.Count - 1].Copy(nextCurveLeft.nodes[0]);
+            nodes[2].Copy(nextCurveLeft.nodes[0]);
         }
     }
 
@@ -113,7 +122,8 @@ public class Bifurcation : TrackElement
         }
         else
         {
-            Debug.Assert(true, "Data file not found");
+            //Debug.Assert(true, "Data file not found");
+            Create();
         }
     }
 
@@ -131,9 +141,9 @@ public class Bifurcation : TrackElement
             nodes[nodes.Count - 1].transform.rotation);
 
         // Create Splines
-        CreateSpline(node0, node1);
-        CreateSpline(node1, node2);
-        CreateSpline(node1, node3);
+        CreateSpline(node0, node1).Extrude(meshes[0], extrudeShape); ;
+        CreateSpline(node1, node2).Extrude(meshes[1], extrudeShape); ;
+        CreateSpline(node1, node3).Extrude(meshes[2], extrudeShape); ;
     }
 
     public override Node CreateNode(Vector3 position, Quaternion rotation)
@@ -141,6 +151,9 @@ public class Bifurcation : TrackElement
         GameObject nodeGO = Instantiate(nodePrefab, transform.position, transform.rotation) as GameObject;
         nodeGO.transform.parent = transform;
         Node node = nodeGO.GetComponent<Node>();
+
+        node.frontTransform = node.transform.FindChild("front");
+        node.backTransform = node.transform.FindChild("back");
 
         node.position = position;
         node.curve = this;

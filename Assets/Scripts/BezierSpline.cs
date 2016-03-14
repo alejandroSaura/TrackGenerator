@@ -150,6 +150,8 @@ public class BezierSpline : MonoBehaviour
 
     public void Extrude(Mesh mesh, ExtrudeShape shape)
     {
+        if (shape == null) shape = new ExtrudeShape();
+
         float splineLength = GetLength();
         shape.Initialize(1, curve.horizontalDivisions);        
 

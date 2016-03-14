@@ -33,8 +33,8 @@ public class Node : MonoBehaviour
     public float rightCurvature = 0; // between 0 and 1
     public float leftCurvature = 0; // between 0 and 1
 
-    Transform frontTransform;
-    Transform backTransform;   
+    public Transform frontTransform;
+    public Transform backTransform;   
 
     public Vector3 frontControl
     {

@@ -11,9 +11,9 @@ public class BifurcationEditor : Editor
         DrawDefaultInspector();
 
         Bifurcation bifurcation = (Bifurcation)target;
-        if (GUILayout.Button("Reload"))
+        if (GUILayout.Button("ReCreateGeometry"))
         {
-            bifurcation.Create();
+            bifurcation.Load();
         }
         if (GUILayout.Button("Clear"))
         {

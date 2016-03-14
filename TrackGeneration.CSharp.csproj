@@ -75,10 +75,12 @@
     <Compile Include="Assets\Scripts\Bifurcation.cs" />
     <Compile Include="Assets\Scripts\Curve.cs" />
     <Compile Include="Assets\Scripts\ExtrudeShape.cs" />
+    <Compile Include="Assets\Scripts\MenuExtension.cs" />
     <Compile Include="Assets\Scripts\Node.cs" />
     <Compile Include="Assets\Scripts\NodeControl.cs" />
     <Compile Include="Assets\Scripts\OrientedPoint.cs" />
     <Compile Include="Assets\Scripts\SerializableStructures.cs" />
+    <Compile Include="Assets\Scripts\Track.cs" />
     <Compile Include="Assets\Scripts\TrackElement.cs" />
   </ItemGroup>
   <ItemGroup>
