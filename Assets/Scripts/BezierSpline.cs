@@ -304,38 +304,25 @@ public class BezierSpline : MonoBehaviour
         Quaternion orientation = GetOrientation(0.5f, Vector3.Lerp(startNode.transform.up, endNode.transform.up, 0.5f));
         Vector3 position = GetPoint(0.5f);
         
-        // new intermediate node creation
-        GameObject newNodeGO = Instantiate(curve.nodePrefab, position, orientation) as GameObject;
-        newNodeGO.transform.parent = curve.transform;
-        Node newNode = newNodeGO.GetComponent<Node>();
-        newNode.curve = this.curve;
+        // new intermediate node creation, taking care of inserting it in the correct position    
+        //Node newNode = curve.CreateNode(position, orientation);
+        GameObject nodeGO = Instantiate(curve.nodePrefab, position, orientation) as GameObject;
+        nodeGO.transform.parent = curve.transform;
+        Node node = nodeGO.GetComponent<Node>();
 
-        // we need to create 2 splines now
-        GameObject newSplineGO = Instantiate(curve.splinePrefab, startNode.position, startNode.transform.rotation) as GameObject;
-        newSplineGO.transform.parent = curve.transform;
-        BezierSpline newSpline = newSplineGO.GetComponent<BezierSpline>();
+        node.position = position;
+        node.curve = this.curve;
 
-        newSpline.startNode = this.startNode;
-        newSpline.endNode = newNode;
-        newSpline.curve = this.curve;
+        int index = curve.nodes.IndexOf(endNode);
+        curve.nodes.Insert(index, node);
 
-        GameObject newSplineGO2 = Instantiate(curve.splinePrefab, newNode.position, newNode.transform.rotation) as GameObject;
-        newSplineGO2.transform.parent = curve.transform;
-        BezierSpline newSpline2 = newSplineGO2.GetComponent<BezierSpline>();
-
-        newSpline2.startNode = newNode;
-        newSpline2.endNode = endNode;
-        newSpline2.curve = this.curve;
-
-        curve.nodes.Add(newNode);
-        curve.splines.Add(newSpline);
-        curve.splines.Add(newSpline2);
-        curve.meshes.Add(new Mesh());
-        curve.meshes.Add(new Mesh());
+        // we need to create 2 splines now        
+        BezierSpline newSpline = curve.CreateSpline(this.startNode, node);
+        BezierSpline newSpline2 = curve.CreateSpline(node, endNode);
 
         // Make sure that its removed from the curve list
         curve.splines.Remove(this);
-        DestroyImmediate(this);
+        DestroyImmediate(this.gameObject);
     }
 
 }

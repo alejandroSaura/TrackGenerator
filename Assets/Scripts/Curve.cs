@@ -47,12 +47,14 @@ public class Curve : MonoBehaviour
         else
         {
             state = "EditorMode";
+            Save();
+            Debug.Log("Saved");
         }
         if(state != lastState)
         {            
             Load();
         }
-        lastState = state;
+        lastState = state;       
     }
 
     public void Save()
@@ -124,19 +126,20 @@ public class Curve : MonoBehaviour
         }
     }
 
-    Node CreateNode(Vector3 position, Quaternion rotation)
+    public Node CreateNode(Vector3 position, Quaternion rotation)
     {
         GameObject nodeGO = Instantiate(nodePrefab, transform.position, transform.rotation) as GameObject;
         nodeGO.transform.parent = transform;        
         Node node = nodeGO.GetComponent<Node>();
 
+        node.position = position;
         node.curve = this;
         nodes.Add(node);        
 
         return node;
     }
 
-    BezierSpline CreateSpline(Node start, Node end)
+    public BezierSpline CreateSpline(Node start, Node end)
     {
         GameObject splineGO = Instantiate(splinePrefab, transform.position, transform.rotation) as GameObject;
         splineGO.transform.parent = transform;
@@ -159,7 +162,7 @@ public class Curve : MonoBehaviour
         if (extrudeShape == null)
         {
             extrudeShape = new ExtrudeShape();
-        }
+        }        
 
         for (int i = 0; i < splines.Count; ++i)
         {

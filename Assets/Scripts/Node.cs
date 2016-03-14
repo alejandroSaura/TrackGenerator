@@ -57,7 +57,7 @@ public class Node : MonoBehaviour
     public Vector3 position
     {
         get { return transform.position; }
-        set { }
+        set { transform.position = value; }
     }
 
     public NodeData Serialize()
