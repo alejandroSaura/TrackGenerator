@@ -22,6 +22,7 @@ public class Bifurcation : TrackElement
     // ----------
 
     string lastState = "";
+
     void Update()
     {
         // Reload curve when changing between editor and play modes
@@ -42,8 +43,8 @@ public class Bifurcation : TrackElement
         // On editor: save changes and recreate geometry
         if (state == "EditorMode")
         {
-            Save();
-            Extrude();
+            if (nodes != null) Save();
+            if (splines != null) Extrude();
         }
 
         // Maintain conection with next curves        
@@ -55,8 +56,6 @@ public class Bifurcation : TrackElement
         {
             //nodes[nodes.Count - 1].Copy(nextCurveLeft.nodes[0]);
         }
-
-
     }
 
     public void Save()
@@ -64,14 +63,17 @@ public class Bifurcation : TrackElement
         BinaryFormatter bf = new BinaryFormatter();
         FileStream file = File.Create(Application.dataPath + "/CurvesSavedData/" + gameObject.name + ".curve");
 
-        CurveData data = new CurveData();
+        BifurcationData data = new BifurcationData();
 
         List<NodeData> _nodesData = new List<NodeData>();
-        foreach (Node n in nodes)
+        if (nodes != null)
         {
-            _nodesData.Add(n.Serialize());
+            foreach (Node n in nodes)
+            {
+                _nodesData.Add(n.Serialize());
+            }
+            data.nodesData = _nodesData.ToArray();
         }
-        data.nodesData = _nodesData.ToArray();
 
         //List<BezierSpline> _splinesData = new List<BezierSpline>();
         //foreach (BezierSpline b in splines)
@@ -92,31 +94,46 @@ public class Bifurcation : TrackElement
 
             BinaryFormatter bf = new BinaryFormatter();
             FileStream file = File.Open(Application.dataPath + "/CurvesSavedData/" + gameObject.name + ".curve", FileMode.Open);
-            CurveData data = (CurveData)bf.Deserialize(file);
+            BifurcationData data = (BifurcationData)bf.Deserialize(file);
             file.Close();
 
             if (extrudeShape == null) { extrudeShape = new ExtrudeShape(); }
 
-            Node previousNode = null;
             for (int i = 0; i < data.nodesData.Length; ++i)
             {
-                // Create Node                
+                // Create Nodes                
                 Node node = CreateNode(transform.position, transform.rotation);
-                node.Load(data.nodesData[i]);
+                node.Load(data.nodesData[i]);                
+            }
 
-                // If not the first, create a spline with the previous one
-                if (previousNode != null)
-                {
-                    BezierSpline spline = CreateSpline(previousNode, node);
-                    spline.Extrude(meshes[i - 1], extrudeShape);
-                }
-                previousNode = node;
-            }            
+            // Create Splines
+            CreateSpline(nodes[0], nodes[1]).Extrude(meshes[0], extrudeShape);
+            CreateSpline(nodes[1], nodes[2]).Extrude(meshes[1], extrudeShape);
+            CreateSpline(nodes[1], nodes[3]).Extrude(meshes[2], extrudeShape);
         }
         else
         {
             Debug.Assert(true, "Data file not found");
         }
+    }
+
+    public void Create()
+    {
+        ClearCurve();
+
+        // Create Nodes                
+        Node node0 = CreateNode(transform.position, transform.rotation);
+        Node node1 = CreateNode(transform.position + nodes[nodes.Count - 1].transform.forward * newNodeDistance, 
+            nodes[nodes.Count - 1].transform.rotation);
+        Node node2 = CreateNode(node1.position + node1.transform.forward * newNodeDistance + 0.5f * node1.transform.right * newNodeDistance, 
+            nodes[nodes.Count - 1].transform.rotation);
+        Node node3 = CreateNode(node1.position + node1.transform.forward * newNodeDistance - 0.5f * node1.transform.right * newNodeDistance,
+            nodes[nodes.Count - 1].transform.rotation);
+
+        // Create Splines
+        CreateSpline(node0, node1);
+        CreateSpline(node1, node2);
+        CreateSpline(node1, node3);
     }
 
     public override Node CreateNode(Vector3 position, Quaternion rotation)
@@ -156,7 +173,7 @@ public class Bifurcation : TrackElement
         {
             extrudeShape = new ExtrudeShape();
         }
-
+        
         for (int i = 0; i < splines.Count; ++i)
         {
             splines[i].Extrude(meshes[i], extrudeShape);

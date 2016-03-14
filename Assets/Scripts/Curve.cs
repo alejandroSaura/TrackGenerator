@@ -23,9 +23,9 @@ public class Curve : TrackElement
     
     bool closed = false;
     bool connected = false;
-
     
     string lastState = "";
+
     void Update()
     {
         // Reload curve when changing between editor and play modes
@@ -46,19 +46,17 @@ public class Curve : TrackElement
         // On editor: save changes and recreate geometry
         if (state == "EditorMode")
         {
-            Save();
-            Extrude();
+            if (nodes != null) Save();
+            if (splines != null) Extrude();
         }
 
         connected = false;
         // Maintain conection with next curve        
-        if (nextCurve != null)
+        if (nextCurve != null && nextCurve.nodes.Count > 0)
         {
             nodes[nodes.Count - 1].Copy(nextCurve.nodes[0]);
             connected = true;
         }
-
-
     }
 
     public void Save()
@@ -69,9 +67,12 @@ public class Curve : TrackElement
         CurveData data = new CurveData();
 
         List<NodeData> _nodesData = new List<NodeData>();
-        foreach (Node n in nodes)
+        if (nodes != null)
         {
-            _nodesData.Add(n.Serialize());
+            foreach (Node n in nodes)
+            {
+                _nodesData.Add(n.Serialize());
+            }
         }
         data.nodesData = _nodesData.ToArray();
 
