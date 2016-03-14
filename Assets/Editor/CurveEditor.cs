@@ -40,7 +40,7 @@ public class CurveEditor : Editor {
         {
             myCurve.CloseCurve();
         }
-        if (GUILayout.Button("CreateGeometry"))
+        if (GUILayout.Button("ReCreateGeometry"))
         {
             myCurve.Extrude();
         }
@@ -48,14 +48,14 @@ public class CurveEditor : Editor {
         {
             myCurve.ClearCurve();
         }
-        if (GUILayout.Button("Save"))
-        {
-            myCurve.Save();
-        }
-        if (GUILayout.Button("Load"))
-        {
-            myCurve.Load();
-        }
+        //if (GUILayout.Button("Save"))
+        //{
+        //    myCurve.Save();
+        //}
+        //if (GUILayout.Button("Load"))
+        //{
+        //    myCurve.Load();
+        //}
     }
 
 }

@@ -72,12 +72,14 @@
     <Compile Include="Assets\DebugDrawingExtension\DebugExtension.cs" />
     <Compile Include="Assets\DebugDrawingExtension\Example\Example.cs" />
     <Compile Include="Assets\Scripts\BezierSpline.cs" />
+    <Compile Include="Assets\Scripts\Bifurcation.cs" />
     <Compile Include="Assets\Scripts\Curve.cs" />
     <Compile Include="Assets\Scripts\ExtrudeShape.cs" />
     <Compile Include="Assets\Scripts\Node.cs" />
     <Compile Include="Assets\Scripts\NodeControl.cs" />
     <Compile Include="Assets\Scripts\OrientedPoint.cs" />
     <Compile Include="Assets\Scripts\SerializableStructures.cs" />
+    <Compile Include="Assets\Scripts\TrackElement.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\DebugDrawingExtension\readme.txt" />

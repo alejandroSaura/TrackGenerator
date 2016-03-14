@@ -7,24 +7,20 @@ using System;
 
 
 [Serializable]
-class CurveData
+class BifurcationData
 {
-    public bool closed;
     public NodeData[] nodesData;
     //public BezierSpline[] splinesData;
 }
 
 [ExecuteInEditMode]
-public class Curve : TrackElement
+public class Bifurcation : TrackElement
 {
     // connectors
-    public TrackElement nextCurve;
+    public TrackElement nextCurveRight;
+    public TrackElement nextCurveLeft;
     // ----------
-    
-    bool closed = false;
-    bool connected = false;
 
-    
     string lastState = "";
     void Update()
     {
@@ -34,11 +30,11 @@ public class Curve : TrackElement
             state = "PlayMode";
         else
         {
-            state = "EditorMode";            
+            state = "EditorMode";
             //Debug.Log("Saved");
         }
-        if(state != lastState)
-        {            
+        if (state != lastState)
+        {
             Load();
         }
         lastState = state;
@@ -50,12 +46,14 @@ public class Curve : TrackElement
             Extrude();
         }
 
-        connected = false;
-        // Maintain conection with next curve        
-        if (nextCurve != null)
+        // Maintain conection with next curves        
+        if (nextCurveRight != null)
         {
-            nodes[nodes.Count - 1].Copy(nextCurve.nodes[0]);
-            connected = true;
+            //nodes[nodes.Count - 1].Copy(nextCurveRight.nodes[0]);
+        }
+        if (nextCurveLeft != null)
+        {
+            //nodes[nodes.Count - 1].Copy(nextCurveLeft.nodes[0]);
         }
 
 
@@ -64,7 +62,7 @@ public class Curve : TrackElement
     public void Save()
     {
         BinaryFormatter bf = new BinaryFormatter();
-        FileStream file = File.Create(Application.dataPath + "/CurvesSavedData/" + gameObject.name + ".curve");        
+        FileStream file = File.Create(Application.dataPath + "/CurvesSavedData/" + gameObject.name + ".curve");
 
         CurveData data = new CurveData();
 
@@ -82,15 +80,13 @@ public class Curve : TrackElement
         //}
         //data.splinesData = _splinesData.ToArray();
 
-        data.closed = this.closed;
-
         bf.Serialize(file, data);
         file.Close();
     }
 
     public void Load()
     {
-        if(File.Exists(Application.dataPath + "/CurvesSavedData/" + gameObject.name + ".curve"))
+        if (File.Exists(Application.dataPath + "/CurvesSavedData/" + gameObject.name + ".curve"))
         {
             ClearCurve();
 
@@ -115,14 +111,7 @@ public class Curve : TrackElement
                     spline.Extrude(meshes[i - 1], extrudeShape);
                 }
                 previousNode = node;
-            }
-
-            this.closed = data.closed;
-            if(closed)
-            {
-                BezierSpline spline = CreateSpline(nodes[nodes.Count-1], nodes[0]);
-                spline.Extrude(meshes[meshes.Count-1], extrudeShape);
-            }
+            }            
         }
         else
         {
@@ -133,12 +122,12 @@ public class Curve : TrackElement
     public override Node CreateNode(Vector3 position, Quaternion rotation)
     {
         GameObject nodeGO = Instantiate(nodePrefab, transform.position, transform.rotation) as GameObject;
-        nodeGO.transform.parent = transform;        
+        nodeGO.transform.parent = transform;
         Node node = nodeGO.GetComponent<Node>();
 
         node.position = position;
         node.curve = this;
-        nodes.Add(node);        
+        nodes.Add(node);
 
         return node;
     }
@@ -166,18 +155,16 @@ public class Curve : TrackElement
         if (extrudeShape == null)
         {
             extrudeShape = new ExtrudeShape();
-        }        
+        }
 
         for (int i = 0; i < splines.Count; ++i)
         {
             splines[i].Extrude(meshes[i], extrudeShape);
         }
-    }    
+    }
 
-    public void AddSpline ()
+    public void AddSpline()
     {
-        if (closed || connected) return;
-
         if (splines.Count == 0)
         {
             // Create the first segment           
@@ -187,29 +174,18 @@ public class Curve : TrackElement
         }
         else
         {
-            Node lastNode = nodes[nodes.Count - 1];          
+            Node lastNode = nodes[nodes.Count - 1];
             Node newNode = CreateNode(lastNode.position + lastNode.transform.forward * newNodeDistance, lastNode.transform.rotation);
             CreateSpline(lastNode, newNode);
         }
-    }	
-
-    public void CloseCurve()
-    {
-        if (closed || connected) return;
-
-        Node lastNode = nodes[nodes.Count - 1];
-        Node firstNode = nodes[0];
-        CreateSpline(lastNode, firstNode);
-
-        closed = true;       
-    }
+    }    
 
     public void ClearCurve()
     {
         // Clear node references
         for (int i = 0; i < nodes.Count; ++i)
         {
-            if(nodes[i] != null)
+            if (nodes[i] != null)
                 DestroyImmediate(nodes[i].gameObject);
         }
         nodes.Clear();
@@ -231,15 +207,13 @@ public class Curve : TrackElement
         meshes.Clear();
 
         // destroy other unreferenced elements        
-        while(transform.childCount != 0)
+        while (transform.childCount != 0)
         {
-            if(transform.GetChild(0) != null)
+            if (transform.GetChild(0) != null)
                 DestroyImmediate(transform.GetChild(0).gameObject);
         }
-
-        closed = false;
-
     }
 
-        
+
 }
+

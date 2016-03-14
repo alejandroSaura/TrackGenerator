@@ -22,7 +22,7 @@ public class NodeData
 [ExecuteInEditMode]
 public class Node : MonoBehaviour
 {
-    public Curve curve;    
+    public TrackElement curve;    
 
     public float gizmoSize = 0.2f;
 

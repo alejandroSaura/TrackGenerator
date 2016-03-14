@@ -11,7 +11,7 @@ public struct BezierData
 public class BezierSpline : MonoBehaviour
 {    
     public Material material;
-    public Curve curve;
+    public TrackElement curve;
 
     public int numTracersDebug = 100;
 
@@ -317,8 +317,8 @@ public class BezierSpline : MonoBehaviour
         curve.nodes.Insert(index, node);
 
         // we need to create 2 splines now        
-        BezierSpline newSpline = curve.CreateSpline(this.startNode, node);
-        BezierSpline newSpline2 = curve.CreateSpline(node, endNode);
+        curve.CreateSpline(this.startNode, node);
+        curve.CreateSpline(node, endNode);
 
         // Make sure that its removed from the curve list and eliminate the associated mesh
         curve.meshes.RemoveAt(curve.splines.IndexOf(this));
