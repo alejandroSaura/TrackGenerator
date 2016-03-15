@@ -15,6 +15,8 @@ public class MenuExtension : MonoBehaviour
             Undo.RegisterCreatedObjectUndo(track, "Create " + track.name);
             Selection.activeObject = track;
             track.AddComponent<Track>();
+            MeshRenderer mR = track.AddComponent<MeshRenderer>();            
+
         }
         Track trackScript = track.GetComponent<Track>();
 

@@ -156,7 +156,8 @@ public class BezierSpline : MonoBehaviour
         shape.Initialize(1, curve.horizontalDivisions);        
 
         int divisions = (int)(curve.divisionsPerCurve * splineLength / curve.trackWidth / 20);
-        int vertsInShape = curve.horizontalDivisions + 1;
+        if (divisions < 1) divisions = 1;
+        int vertsInShape = shape.verts.Length;
 
         List<int> triangleIndices = new List<int>(); //new int[triIndexCount];
         List <Vector3> vertices = new List<Vector3>();  //new Vector3[vertCount];
@@ -258,20 +259,7 @@ public class BezierSpline : MonoBehaviour
         // Create triangles
         for (int j = 0; j < divisions; ++j)
         {// for each division in the curve
-            int offset = shape.verts.Length * j;
-
-            for (int k = 0; k < shape.lines.Length; k = k + 2)
-            {//for each 2d line in the shape
-                // triangle 1                
-                triangleIndices.Add(shape.lines[k + 1] + offset);
-                triangleIndices.Add(shape.lines[k] + offset);
-                triangleIndices.Add(shape.lines[k] + offset + shape.verts.Length);
-                // triangle 2
-                triangleIndices.Add(shape.lines[k + 1] + offset);
-                triangleIndices.Add(shape.lines[k] + offset + shape.verts.Length);
-                triangleIndices.Add(shape.lines[k + 1] + offset + shape.verts.Length);
-
-            }
+            int offset = shape.verts.Length * j;           
 
             for (int k = 0; k < shape.lines.Length; k = k + 2)
             {//for each 2d line in the shape
@@ -294,6 +282,110 @@ public class BezierSpline : MonoBehaviour
         mesh.triangles = triangleIndices.ToArray();
         mesh.normals = normals.ToArray();
         mesh.uv = uvs.ToArray();
+
+        //mesh.RecalculateNormals();      
+
+        gameObject.GetComponent<MeshFilter>().mesh = mesh;
+        gameObject.GetComponent<MeshCollider>().sharedMesh = mesh;
+    }
+
+    public void ExtrudeSide(Mesh mesh, ExtrudeShape shape, string side)
+    {
+        if (shape == null) shape = new ExtrudeShape();
+
+        int factor = 1;
+        if (side == "left") factor = -1;
+        
+
+        float splineLength = GetLength();
+        shape.Initialize(1, curve.horizontalDivisions);
+
+        int divisions = (int)(curve.divisionsPerCurve * splineLength / curve.trackWidth / 20);
+        if (divisions < 1) divisions = 1;
+        int vertsInShape = shape.verts.Length;
+
+        List<int> triangleIndices = new List<int>(); //new int[triIndexCount];
+        List<Vector3> vertices = new List<Vector3>();  //new Vector3[vertCount];
+        List<Vector3> normals = new List<Vector3>(); //new Vector3[vertCount];
+        List<Vector2> uvs = new List<Vector2>(); //new Vector2[vertCount];
+
+        /*
+            Mesh generation code
+        */
+        #region meshGeneration
+
+        float divisionLength = 1.0f / (float)divisions;
+        orientedPoints = new OrientedPoint[divisions + 1];
+
+        // Create vertices
+        for (int i = 0; i <= divisions; ++i)
+        {// for each edgeLoop
+            float t = i * divisionLength;
+
+            Vector3 up = Vector3.Lerp(startNode.transform.up, endNode.transform.up, t);
+            float curvature = Mathf.Lerp(startNode.rightCurvature, endNode.rightCurvature, t);
+            float width = (curve.trackWidth + Mathf.Lerp(startNode.trackWidthModifier, endNode.trackWidthModifier, t)) / 2;
+            Matrix4x4 scale = Matrix4x4.Scale(new Vector3(width, width, width));
+
+            // Initialize oriented point
+            orientedPoints[i].position = transform.InverseTransformPoint(GetPoint(t));
+            orientedPoints[i].rotation = Quaternion.Inverse(transform.rotation) * (GetOrientation(t, up));
+            orientedPoints[i].scale = scale;
+
+            for (int j = 0; j < vertsInShape; ++j)
+            {// for each vertex in the shape
+
+                Vector2 vertex = Vector2.Lerp(shape.verts[j], shape.curvedVerts[j], curvature);
+                vertex.x *= factor;
+                Vector2 normal = Vector2.Lerp(shape.normals[j], shape.curvedNormals[j], curvature);
+
+                vertices.Add(orientedPoints[i].LocalToWorld(vertex));
+                normals.Add(orientedPoints[i].LocalToWorldDirection(normal));
+
+                // u is based on the 2D shape, and v is based on the distance along the curve
+                uvs.Add(new Vector2(shape.us[j], t * splineLength / width));
+            }
+        }
+
+        // Create triangles
+        for (int j = 0; j < divisions; ++j)
+        {// for each division in the curve
+            int offset = shape.verts.Length * j;
+
+            for (int k = 0; k < shape.lines.Length; k = k + 2)
+            {//for each 2d line in the shape
+                if (side == "right")
+                {
+                    // triangle 1                
+                    triangleIndices.Add(shape.lines[k + 1] + offset);
+                    triangleIndices.Add(shape.lines[k] + offset);
+                    triangleIndices.Add(shape.lines[k] + offset + shape.verts.Length);
+                    // triangle 2
+                    triangleIndices.Add(shape.lines[k + 1] + offset);
+                    triangleIndices.Add(shape.lines[k] + offset + shape.verts.Length);
+                    triangleIndices.Add(shape.lines[k + 1] + offset + shape.verts.Length);
+                }
+                else
+                {
+                    // triangle 1     
+                    triangleIndices.Add(shape.lines[k] + offset);
+                    triangleIndices.Add(shape.lines[k + 1] + offset);                    
+                    triangleIndices.Add(shape.lines[k] + offset + shape.verts.Length);
+                    // triangle 2
+                    triangleIndices.Add(shape.lines[k] + offset + shape.verts.Length);
+                    triangleIndices.Add(shape.lines[k + 1] + offset);                    
+                    triangleIndices.Add(shape.lines[k + 1] + offset + shape.verts.Length);
+                }
+            }
+        }
+
+        mesh.Clear();
+        mesh.vertices = vertices.ToArray();
+        mesh.triangles = triangleIndices.ToArray();
+        mesh.normals = normals.ToArray();
+        mesh.uv = uvs.ToArray();
+
+        #endregion
 
         //mesh.RecalculateNormals();      
 

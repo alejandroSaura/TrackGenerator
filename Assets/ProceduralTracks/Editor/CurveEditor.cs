@@ -36,6 +36,10 @@ public class CurveEditor : Editor {
         {
             myCurve.AddSpline();
         }
+        if (GUILayout.Button("DeleteLastSpline"))
+        {
+            myCurve.DeleteSpline();
+        }
         if (GUILayout.Button("CloseCurve"))
         {
             myCurve.CloseCurve();
